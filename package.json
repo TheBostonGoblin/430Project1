@@ -1,0 +1,24 @@
+{
+  "name": "430project1",
+  "version": "1.0.0",
+  "description": "my first 430 project with node js",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheBostonGoblin/430Project1.git"
+  },
+  "author": "Daniel Joseph Jr",
+  "license": "UNLICENCED",
+  "bugs": {
+    "url": "https://github.com/TheBostonGoblin/430Project1/issues"
+  },
+  "homepage": "https://github.com/TheBostonGoblin/430Project1#readme",
+  "devDependencies": {
+    "eslint": "^8.24.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-plugin-import": "^2.26.0"
+  }
+}

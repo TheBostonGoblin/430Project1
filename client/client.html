@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>430 Project 1</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        data = {
+            squares:[
+                {
+                    name: "dave",
+                    position: [100,200]
+                }
+            ]
+        }
+
+        const svgWidth = 1000;
+        const svgHeight = 1000;
+
+        const svg = d3.select(".svgWrapper")
+        .append("svg")
+        .attr('width',svgWidth)
+        .attr('height',svgHeight);
+
+        svg.append('rect')
+        .attr('width',svgWidth)
+        .attr('height',svgHeight)
+        .style('fill','cornsilk');
+
+
+
+
+    </script>
+</head>
+<body>
+    <div class="svgWrapper">
+
+    </div>
+</body>
+</html>
