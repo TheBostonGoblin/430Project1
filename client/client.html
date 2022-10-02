@@ -1,42 +1,230 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>430 Project 1</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script>
-        data = {
-            squares:[
-                {
-                    name: "dave",
-                    position: [100,200]
-                }
-            ]
+    <link rel="stylesheet" type="text/css" href="./style.css">
+</head>
+
+<script>
+    const generateBarChart = (jsonObject,selectedChartName) =>{
+        const margin = { top: 10, right: 10, bottom: 90, left: 40 },
+            width = 500 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
+
+        const removedSVG = d3.select('svg').remove();
+        const svg = d3.select("#loadedChart")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            console.log(eval(`jsonObject.charts.${selectedChartName}`));
+            let dataSelected = eval(`jsonObject.charts.${selectedChartName}`);
+
+            let keys = Object.keys(dataSelected[0]);
+            const qualitativeData = keys[1];//Names,Brands,Spices, Objects that dont reprenet numeric value
+            const quantitativeData = keys[0];//Number Of Kids, Age, Number
+
+
+            const xScale = d3.scaleBand()
+                .range([0, width])
+                .domain(dataSelected.map(d => eval(`d.${qualitativeData}`)))
+                .padding(0.2);
+
+
+            svg.append("g")
+                .attr("transform", `translate(0, ${height})`)
+                .call(d3.axisBottom(xScale))
+                .selectAll("text")
+                .attr("transform", `translate(${-margin.right-3},9)rotate(-90)`)
+                .style("text-anchor", "end");
+
+                console.log(d3.max(dataSelected, (d) => eval(`d.${quantitativeData}`)));
+            // Add Y axis
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(dataSelected, (d) => eval(`d.${quantitativeData}`))])
+                .range([height, 0]);
+            svg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            // Bars
+            svg.selectAll("mybar")
+                .data(dataSelected)
+                .join("rect")
+                .attr("x", d => xScale(eval(`d.${qualitativeData}`)))
+                .attr("y", d => yScale(eval(`d.${quantitativeData}`)))
+                .attr("width", xScale.bandwidth())
+                .attr("height", d => height - yScale(eval(`d.${quantitativeData}`)))
+                .attr("fill", "#69b3a2");
+
+        }
+    const handleResponse = async (response, method) => {
+
+        const chartNameFieldVal = setChartForm.querySelector('#chartNam').value;
+        const status = document.querySelector("#status");
+        const message = document.querySelector("#message");
+        const selectChart = document.querySelector('#seleChart');
+
+        //may be replaced in the future
+        if (response.status === 200) {
+            status.innerHTML = '<b>Status: Successful<b>';
+        }
+        else if (response.status === 201) {
+            //chart created/bar created
+            status.innerHTML = '<b>Status: Bar/Chart Created<b>';
+                let option = document.createElement("option");
+                option.text = chartNameFieldVal;
+                option.value = chartNameFieldVal;
+                selectChart.add(option);
+        }
+        else if (response.status === 204) {
+            //bar updated
+            status.innerHTML = '<b>Status: Bar/Chart Updated<b>';
+        }
+        else if (response.status === 400) {
+            status.innerHTML = '<b>Status: Bad Request<b>';
+            //bad request
+        }
+        else if (response.status === 404) {
+            status.innerHTML = '<b>Status: Not Found<b>';
+            //bad request
+        }
+        else {
+            status.innerHTML = '<i>Status: Error code not handled by client<i>';
+            //error not by the client
         }
 
-        const svgWidth = 1000;
-        const svgHeight = 1000;
 
-        const svg = d3.select(".svgWrapper")
-        .append("svg")
-        .attr('width',svgWidth)
-        .attr('height',svgHeight);
+        if (method === 'GET') {
+            let obj = await response.json();
+            if (obj.message) {//if there is a message render it such as in the case of a notReal call
+                message.innerHTML = `Message: ${obj.message}`;
+            }
+            else {//if it does not have a message this means its a result most likely getUsers show results 
+                //let json = JSON.parse(obj[]);
+                let chartSelected = selectChart.value.toString();
+                //let keys = Object.keys(obj.charts.)
+                let schoolKey = obj.charts.SchoolKidAge;
+                let jsonString = JSON.stringify(obj.charts);
+                // let jsonSelected = `${jsonString}.${chartSelected}`;
+                // let evaled = eval(jsonSelected);
 
-        svg.append('rect')
-        .attr('width',svgWidth)
-        .attr('height',svgHeight)
-        .style('fill','cornsilk');
 
+                message.innerHTML = `${jsonString}`;
+                generateBarChart(obj,chartSelected);
+            }
+        }
+        else {//if headerfile there should be no results UNLESS we are creating a new user
+            if (response.status === 201 || response.status === 400) {//if the response is a post and is sucessful or a failure it should relay a messge to the user
+                let obj = await response.json();
+                if (obj.message) {
+                    message.innerHTML = `Message: ${obj.message}`;
+                }
+            }
+            else {//if it is really just a head request than there is no message needed
 
+            }
+        }
+    }
+    const postRequest = async (setChartForm) => {
+        const chartNameField = setChartForm.querySelector('#chartNam');
+        const chartQualitName = setChartForm.querySelector('#qualDataNam');
+        const chartQuantName = setChartForm.querySelector('#quantDataNam');
+        const chartQualitVal = setChartForm.querySelector('#qualitData');
+        const chartQuantVal = setChartForm.querySelector('#quantData');
 
+        const setChartAction = setChartForm.getAttribute('action');
+        const setChartMethod = setChartForm.getAttribute('method');
 
-    </script>
-</head>
+        const formData =`name=${chartNameField.value}&qualitNam=${chartQualitName.value}&quantNam=${chartQuantName.value}&qualitVal=${chartQualitVal.value}&quantVal=${chartQuantVal.value}`;
+
+        let response = await fetch(setChartAction, {
+            method: setChartMethod,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                "Accept": 'application/json'
+            },
+            body: formData
+        });
+
+        handleResponse(response, 'POST');
+    }
+    const getRequest = async (getChartForm) => {
+        let method = 'get';
+        let url = '/getCharts'
+        let response = await fetch(url, {
+            method,
+            headers: {
+                'Accept': 'application/json'
+            }
+
+        });
+
+        handleResponse(response, 'GET');
+
+    }
+
+    const init = () => {
+        const setChartForm = document.querySelector('#setChartForm');
+
+        const addBarToChart = (e) => {
+            e.preventDefault();
+            postRequest(setChartForm);
+            return false;
+        }
+
+        const getChartForm = document.querySelector('#getChartForm');
+
+        const getCharts = (e) => {
+            e.preventDefault();
+            getRequest(getChartForm);
+            return false;
+        }
+
+        setChartForm.addEventListener('submit', addBarToChart);
+        getChartForm.addEventListener('submit', getCharts);
+    }
+
+    window.onload = init;
+</script>
+
 <body>
-    <div class="svgWrapper">
+    <h1>Bar Chart Creation App</h1>
+    <form id="setChartForm" action="/addBarToChart" method="post">
+        <label for="chartName">Chart Name:</label>
+        <input type="text" name="chartName" id="chartNam">
+
+        <label for="qualitNam">(Name)Qualitative Data Name:</label>
+        <input type="text" name="qualitNam" id="qualDataNam">
+
+        <label for="quantNam">(Age)Quantitative Data Name</label>
+        <input type="text" name="quantNam" id="quantDataNam">
+
+        <label for="qualitVal">(Kid Name) Bar Quantitative Value:</label>
+        <input id="qualitData" type="text" name="qualitVal">
+
+        <label for="quantVal">(Kid Age) Bar Qualtitative Value:</label>
+        <input id="quantData" type="text" name="quantVal">
+
+        <input type="submit" value="Bar Added To Chart/Create Chart">
+    </form>
+
+    <form id="getChartForm" action="/getCharts" method="get">
+        <select name="selectChart" id="seleChart"></select>
+        <input type="submit" value="Get Chart">
+    </form>
+
+    <h2 id="status"></h2>
+    <p id="message"></p>
+    <div id="loadedChart">
 
     </div>
 </body>
+
 </html>
