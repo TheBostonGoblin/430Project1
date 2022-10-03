@@ -17,6 +17,11 @@ const getCharts = (request, response) => { // used to get a specific chart
 
   return respondJSON(request, response, 200, responseJSON);
 };
+
+const getChartNames = (request,response) =>{
+  let keys =  Object.keys(charts);
+  return respondJSON(request,response,200,keys);
+}
 const addBarToChart = (request, response, body) => {
   if (!body.name || !body.qualitNam || !body.quantNam || !body.qualitVal || !body.quantVal) {
     const responseJSON = {

@@ -64,6 +64,7 @@
                 .attr("fill", "#69b3a2");
 
         }
+
     const handleResponse = async (response, method) => {
 
         const chartNameFieldVal = setChartForm.querySelector('#chartNam').value;
@@ -107,15 +108,9 @@
                 message.innerHTML = `Message: ${obj.message}`;
             }
             else {//if it does not have a message this means its a result most likely getUsers show results 
-                //let json = JSON.parse(obj[]);
+
                 let chartSelected = selectChart.value.toString();
-                //let keys = Object.keys(obj.charts.)
-                let schoolKey = obj.charts.SchoolKidAge;
                 let jsonString = JSON.stringify(obj.charts);
-                // let jsonSelected = `${jsonString}.${chartSelected}`;
-                // let evaled = eval(jsonSelected);
-
-
                 message.innerHTML = `${jsonString}`;
                 generateBarChart(obj,chartSelected);
             }
@@ -169,10 +164,11 @@
         handleResponse(response, 'GET');
 
     }
-
     const init = () => {
         const setChartForm = document.querySelector('#setChartForm');
-
+        const chartsDropDown = document.querySelector('#chartsDD');
+        
+        getPrexistingCharts();
         const addBarToChart = (e) => {
             e.preventDefault();
             postRequest(setChartForm);
@@ -217,7 +213,7 @@
 
     <form id="getChartForm" action="/getCharts" method="get">
         <select name="selectChart" id="seleChart"></select>
-        <input type="submit" value="Get Chart">
+        <input id="chartsDD" type="submit" value="Get Chart">
     </form>
 
     <h2 id="status"></h2>
