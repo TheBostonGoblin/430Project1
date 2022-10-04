@@ -33,7 +33,11 @@ const handleGet = (request, response, parsedURL) => {
     htmlHandler.getCSS(request, response);
   } else if (parsedURL.pathname === '/getCharts') {
     jsonHandler.getCharts(request, response);
-  } else {
+  } 
+  else if(parsedURL.pathname === '/getPreExisting'){
+    jsonHandler.getChartNames(request,response);
+  }
+  else {
     htmlHandler.getIndex(request, response);
   }
 };

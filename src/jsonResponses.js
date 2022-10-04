@@ -83,6 +83,7 @@ module.exports = {
   addBarToChart,
   notFound,
   notFoundMeta,
+  getChartNames
 };
 // const addBar = (request, response, body) => {//selected value should be the charts name
 //     if (!body.name || !body.qualitVal || !body.quantVal) {

@@ -11,7 +11,7 @@
 </head>
 
 <script>
-    const generateBarChart = (jsonObject,selectedChartName) =>{
+    const generateBarChart = (jsonObject, selectedChartName) => {
         const margin = { top: 10, right: 10, bottom: 90, left: 40 },
             width = 500 - margin.left - margin.right,
             height = 500 - margin.top - margin.bottom;
@@ -24,48 +24,52 @@
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            console.log(eval(`jsonObject.charts.${selectedChartName}`));
-            let dataSelected = eval(`jsonObject.charts.${selectedChartName}`);
+        console.log(eval(`jsonObject.charts.${selectedChartName}`));
+        let chartSelected = eval(`jsonObject.charts.${selectedChartName}`);
 
-            let keys = Object.keys(dataSelected[0]);
-            const qualitativeData = keys[1];//Names,Brands,Spices, Objects that dont reprenet numeric value
-            const quantitativeData = keys[0];//Number Of Kids, Age, Number
+        let keys = Object.keys(chartSelected[0]);
+        const qualitativeData = keys[1];//Names,Brands,Spices, Objects that dont reprenet numeric value
+        const quantitativeData = keys[0];//Number Of Kids, Age, Number
+
+        chartSelected.forEach(function(d){
+            d.qualitativeData = d.qualitativeData;
+            d.quantitativeData = parseInt(d.quantitativeData);
+        });
+
+        const xScale = d3.scaleBand()
+            .range([0, width])
+            .domain(chartSelected.map(d => eval(`d.${qualitativeData}`)))
+            .padding(0.2);
 
 
-            const xScale = d3.scaleBand()
-                .range([0, width])
-                .domain(dataSelected.map(d => eval(`d.${qualitativeData}`)))
-                .padding(0.2);
+        svg.append("g")
+            .attr("transform", `translate(0, ${height})`)
+            .call(d3.axisBottom(xScale))
+            .selectAll("text")
+            .attr("transform", `translate(${-margin.right - 3},9)rotate(-90)`)
+            .style("text-anchor", "end");
 
+        console.log(d3.max(chartSelected, (d) => eval(`d.${quantitativeData}`)));
+        // Add Y axis
+        const yScale = d3.scaleLinear()
+            .domain([0, d3.max(chartSelected, (d) => eval(`d.${quantitativeData}`))])
+            .range([height, 0]);
+        svg.append("g")
+            .call(d3.axisLeft(yScale));
 
-            svg.append("g")
-                .attr("transform", `translate(0, ${height})`)
-                .call(d3.axisBottom(xScale))
-                .selectAll("text")
-                .attr("transform", `translate(${-margin.right-3},9)rotate(-90)`)
-                .style("text-anchor", "end");
+        // Bars
+        svg.selectAll("mybar")
+            .data(chartSelected)
+            .join("rect")
+            .attr("x", d => xScale(eval(`d.${qualitativeData}`)))
+            .attr("y", d => yScale(eval(`d.${quantitativeData}`)))
+            .attr("width", xScale.bandwidth())
+            .attr("height", d => height - yScale(eval(`d.${quantitativeData}`)))
+            .attr("fill", "#69b3a2");
 
-                console.log(d3.max(dataSelected, (d) => eval(`d.${quantitativeData}`)));
-            // Add Y axis
-            const yScale = d3.scaleLinear()
-                .domain([0, d3.max(dataSelected, (d) => eval(`d.${quantitativeData}`))])
-                .range([height, 0]);
-            svg.append("g")
-                .call(d3.axisLeft(yScale));
+    }
 
-            // Bars
-            svg.selectAll("mybar")
-                .data(dataSelected)
-                .join("rect")
-                .attr("x", d => xScale(eval(`d.${qualitativeData}`)))
-                .attr("y", d => yScale(eval(`d.${quantitativeData}`)))
-                .attr("width", xScale.bandwidth())
-                .attr("height", d => height - yScale(eval(`d.${quantitativeData}`)))
-                .attr("fill", "#69b3a2");
-
-        }
-
-    const handleResponse = async (response, method) => {
+    const handleResponse = async (response, method, url) => {
 
         const chartNameFieldVal = setChartForm.querySelector('#chartNam').value;
         const status = document.querySelector("#status");
@@ -79,10 +83,10 @@
         else if (response.status === 201) {
             //chart created/bar created
             status.innerHTML = '<b>Status: Bar/Chart Created<b>';
-                let option = document.createElement("option");
-                option.text = chartNameFieldVal;
-                option.value = chartNameFieldVal;
-                selectChart.add(option);
+            let option = document.createElement("option");
+            option.text = chartNameFieldVal;
+            option.value = chartNameFieldVal;
+            selectChart.add(option);
         }
         else if (response.status === 204) {
             //bar updated
@@ -108,11 +112,24 @@
                 message.innerHTML = `Message: ${obj.message}`;
             }
             else {//if it does not have a message this means its a result most likely getUsers show results 
-
-                let chartSelected = selectChart.value.toString();
-                let jsonString = JSON.stringify(obj.charts);
-                message.innerHTML = `${jsonString}`;
-                generateBarChart(obj,chartSelected);
+                //console.log(obj);
+                if (url === '/getPreExisting') {
+                    obj.forEach(function (chart) {
+                        let option = document.createElement("option");
+                        option.text = chart;
+                        option.value = chart;
+                        selectChart.add(option);
+                    });
+                }
+                else if (url === '/getCharts') {
+                    let jsonString = JSON.stringify(obj.charts);
+                    message.innerHTML = `${jsonString}`;
+                    let chartSelected = selectChart.value.toString();
+                    if (chartSelected) {
+                        generateBarChart(obj, chartSelected);
+                    }
+                }
+                
             }
         }
         else {//if headerfile there should be no results UNLESS we are creating a new user
@@ -137,7 +154,7 @@
         const setChartAction = setChartForm.getAttribute('action');
         const setChartMethod = setChartForm.getAttribute('method');
 
-        const formData =`name=${chartNameField.value}&qualitNam=${chartQualitName.value}&quantNam=${chartQuantName.value}&qualitVal=${chartQualitVal.value}&quantVal=${chartQuantVal.value}`;
+        const formData = `name=${chartNameField.value}&qualitNam=${chartQualitName.value}&quantNam=${chartQuantName.value}&qualitVal=${chartQualitVal.value}&quantVal=${chartQuantVal.value}`;
 
         let response = await fetch(setChartAction, {
             method: setChartMethod,
@@ -148,9 +165,9 @@
             body: formData
         });
 
-        handleResponse(response, 'POST');
+        handleResponse(response, 'POST', setChartAction);
     }
-    const getRequest = async (getChartForm) => {
+    const getChartRequest = async (getChartForm) => {
         let method = 'get';
         let url = '/getCharts'
         let response = await fetch(url, {
@@ -161,14 +178,28 @@
 
         });
 
-        handleResponse(response, 'GET');
+        handleResponse(response, 'GET', url);
+
+    }
+    const getPreExisting = async () => {
+
+        let method = 'get';
+        let url = '/getPreExisting'
+        let response = await fetch(url, {
+            method,
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        handleResponse(response, 'GET', url);
 
     }
     const init = () => {
         const setChartForm = document.querySelector('#setChartForm');
         const chartsDropDown = document.querySelector('#chartsDD');
-        
-        getPrexistingCharts();
+
+        getPreExisting();
         const addBarToChart = (e) => {
             e.preventDefault();
             postRequest(setChartForm);
@@ -179,7 +210,7 @@
 
         const getCharts = (e) => {
             e.preventDefault();
-            getRequest(getChartForm);
+            getChartRequest(getChartForm);
             return false;
         }
 
