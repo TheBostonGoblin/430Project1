@@ -22,7 +22,26 @@ const getChartNames = (request,response) =>{
   let keys =  Object.keys(charts);
   return respondJSON(request,response,200,keys);
 }
+const deleteChart = (request, response,body) =>{
+  let keys = Object.keys(charts);
+  if(charts[body.name]){
+    const responseJSON = {
+      message: `Chart ${body.name} Has Been Sucessfully Removed`,
+    };
+    delete charts[body.name];
+    return respondJSON(request,response,200,responseJSON);
+  }
+  else{
+    const responseJSON = {
+      message: 'The Chart That you are Trying to Remove Does not Exist Try Creating a Chart First',
+      id: 'chartDoesNotExist',
+    };
+    return respondJSON(request, response, 400, responseJSON);
+  }
+  
+}
 const addBarToChart = (request, response, body) => {
+  
   if (!body.name || !body.qualitNam || !body.quantNam || !body.qualitVal || !body.quantVal) {
     const responseJSON = {
       message: 'To Create a chart you need a Name, qualitative data name, as well as a quantitative data name',
@@ -83,7 +102,8 @@ module.exports = {
   addBarToChart,
   notFound,
   notFoundMeta,
-  getChartNames
+  getChartNames,
+  deleteChart
 };
 // const addBar = (request, response, body) => {//selected value should be the charts name
 //     if (!body.name || !body.qualitVal || !body.quantVal) {

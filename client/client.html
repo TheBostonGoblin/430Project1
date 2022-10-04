@@ -31,7 +31,7 @@
         const qualitativeData = keys[1];//Names,Brands,Spices, Objects that dont reprenet numeric value
         const quantitativeData = keys[0];//Number Of Kids, Age, Number
 
-        chartSelected.forEach(function(d){
+        chartSelected.forEach(function (d) {
             d.qualitativeData = d.qualitativeData;
             d.quantitativeData = parseInt(d.quantitativeData);
         });
@@ -90,7 +90,7 @@
         }
         else if (response.status === 204) {
             //bar updated
-            status.innerHTML = '<b>Status: Bar/Chart Updated<b>';
+            status.innerHTML = '<b>Status: Bar/Chart Updated/Deleted<b>';
         }
         else if (response.status === 400) {
             status.innerHTML = '<b>Status: Bad Request<b>';
@@ -129,10 +129,11 @@
                         generateBarChart(obj, chartSelected);
                     }
                 }
-                
+
             }
         }
         else {//if headerfile there should be no results UNLESS we are creating a new user
+
             if (response.status === 201 || response.status === 400) {//if the response is a post and is sucessful or a failure it should relay a messge to the user
                 let obj = await response.json();
                 if (obj.message) {
@@ -140,11 +141,17 @@
                 }
             }
             else {//if it is really just a head request than there is no message needed
-
+                if (url === '/removeChart') {
+                    selectChart.remove(selectChart.selectedIndex);
+                    let obj = await response.json();
+                    if (obj.message) {
+                        message.innerHTML = `Message: ${obj.message}`;
+                    }
+                }
             }
         }
     }
-    const postRequest = async (setChartForm) => {
+    const postRequestCreateChart = async (setChartForm) => {
         const chartNameField = setChartForm.querySelector('#chartNam');
         const chartQualitName = setChartForm.querySelector('#qualDataNam');
         const chartQuantName = setChartForm.querySelector('#quantDataNam');
@@ -167,6 +174,22 @@
 
         handleResponse(response, 'POST', setChartAction);
     }
+    const postRequestRemoveChart = async (removeChartForm) => {
+        const chartSelected = document.querySelector('#seleChart').value;
+        const formData = `name=${chartSelected}`;
+        let url = removeChartForm.getAttribute('action');
+        let removeChartMethod = removeChartForm.getAttribute('method');
+
+        let response = await fetch(url, {
+            method: removeChartMethod,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                "Accept": 'application/json'
+            },
+            body: formData
+        });
+        handleResponse(response, 'POST',url);
+    }
     const getChartRequest = async (getChartForm) => {
         let method = 'get';
         let url = '/getCharts'
@@ -181,7 +204,7 @@
         handleResponse(response, 'GET', url);
 
     }
-    const getPreExisting = async () => {
+    const getPreExistingRequest = async () => {
 
         let method = 'get';
         let url = '/getPreExisting'
@@ -199,10 +222,10 @@
         const setChartForm = document.querySelector('#setChartForm');
         const chartsDropDown = document.querySelector('#chartsDD');
 
-        getPreExisting();
+        getPreExistingRequest();
         const addBarToChart = (e) => {
             e.preventDefault();
-            postRequest(setChartForm);
+            postRequestCreateChart(setChartForm);
             return false;
         }
 
@@ -214,6 +237,14 @@
             return false;
         }
 
+        const removeChartForm = document.querySelector('#removeChartForm');
+        const removeChart = (e) =>{
+            e.preventDefault();
+            postRequestRemoveChart(removeChartForm);
+            return false;
+        }
+
+        removeChartForm.addEventListener('submit', removeChart);
         setChartForm.addEventListener('submit', addBarToChart);
         getChartForm.addEventListener('submit', getCharts);
     }
@@ -245,6 +276,10 @@
     <form id="getChartForm" action="/getCharts" method="get">
         <select name="selectChart" id="seleChart"></select>
         <input id="chartsDD" type="submit" value="Get Chart">
+    </form>
+
+    <form id="removeChartForm" action="/removeChart" method="post">
+        <input id="removeChart" type="submit" value="Remove Chart">
     </form>
 
     <h2 id="status"></h2>
