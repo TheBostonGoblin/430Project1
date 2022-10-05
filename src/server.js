@@ -43,11 +43,14 @@ const handleGet = (request, response, parsedURL) => {
 };
 
 const handlePost = (request, response, parsedURL) => {
-  if (parsedURL.pathname === '/addBarToChart') {
-    parseBody(request, response, jsonHandler.addBarToChart);
+  if (parsedURL.pathname === '/addChart') {
+    parseBody(request, response, jsonHandler.createChart);
   }
   else if(parsedURL.pathname === '/removeChart'){
     parseBody(request, response, jsonHandler.deleteChart);
+  }
+  else if(parsedURL.pathname === '/addBar'){
+    parseBody(request, response, jsonHandler.createBar);
   }
 };
 

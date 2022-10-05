@@ -40,9 +40,9 @@ const deleteChart = (request, response,body) =>{
   }
   
 }
-const addBarToChart = (request, response, body) => {
-  
-  if (!body.name || !body.qualitNam || !body.quantNam || !body.qualitVal || !body.quantVal) {
+const createChart = (request, response, body) => {
+
+  if (!body.name || !body.qualitNam || !body.quantNam) {
     const responseJSON = {
       message: 'To Create a chart you need a Name, qualitative data name, as well as a quantitative data name',
       id: 'missingParams',
@@ -60,32 +60,55 @@ const addBarToChart = (request, response, body) => {
 
     charts[body.name] = [
       {
-        [quantName]: body.quantVal,
-        [qualitName]: body.qualitVal,
+        [quantName]: null,
+        [qualitName]: null,
       }
     ];
 
     return respondJSON(request, response, 201, responseJSON);
   }
+  else{
+    const responseJSON = {
+      message: 'You cannot create a chart of the same name',
+      id: 'missingParams',
+    };
+    return respondJSON(request, response, 400, responseJSON);
+  }
 
-  const qualitName = body.qualitNam;
-
-  const quantName = body.quantNam;
-
-  charts[body.name].push(
-    {
-      [quantName]: body.quantVal,
-      [qualitName]: body.qualitVal,
-    }
-  );
-  return respondJSONMeta(request, response, 204);
-
-  // else{//changing/updating the labels on your qualitave and quantitative
-  //     charts[body.name].qualit = body.qualit;
-  //     charts[body.name].quant = body.quant;
-  //     return respondJSONMeta(request, response, 204);
-  // }
+  
 };
+
+const createBar = (request,response,body) =>{
+  if(!body.name || !body.qualitVal || !body.quantVal){
+    const responseJSON = {
+      message: 'To Create a bar you need to pass in the charts name and the qualitive and quantative data',
+      id: 'missingParams',
+    }
+    return respondJSON(request, response, 400, responseJSON);
+  }
+  else{
+
+    let chartSelected  = eval(`charts.${body.name}`)
+    //getting the keys for the items
+    let keys =  Object.keys(chartSelected[0]);
+    let quantKey = keys[0];
+    let qualitKey = keys[1];
+    //using a variable to test if this is the first time data is being added
+    let testingChart = eval(`chartSelected[0].${quantKey}`);
+    if(testingChart === null){//determines if this is the first time a bar is being added and thus fills in the null data other wise it will create an new object
+      eval(`chartSelected[0].${quantKey} = body.quantVal`)
+      eval(`chartSelected[0].${qualitKey} = body.qualitVal`);
+    }
+    else{
+      const newData = {
+        [quantKey] : body.quantVal,
+        [qualitKey] : body.qualitVal
+      }
+      console.log(newData);
+      charts[body.name].push(newData);
+    }
+  }
+}
 
 const notFound = (request, response) => {
   const responseJSON = {
@@ -96,10 +119,82 @@ const notFound = (request, response) => {
   return respondJSON(request, response, 404, responseJSON);
 };
 const notFoundMeta = (request, response) => respondJSONMeta(request, response, 404);
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// const createChart = (request,response,body) =>{
+//   if (!body.name || !body.qualitNam || !body.quantNam){
+//     const responseJSON = {
+//       message: 'To Create a chart you need to name the chart a give names to the qualitative and quantatative data',
+//       id: 'missingParams',
+//     };
+//     return respondJSON(request, response, 400, responseJSON);
+//   }
+//   else if(!charts[body.name]){
+//     const responseJSON = {
+//       message: 'Chart Created Sucessfully',
+//     };
+
+//     const qualitName = body.qualitNam;
+
+//     const quantName = body.quantNam;
+
+//     charts[body.name] = [
+//       {
+//         qualitiveName: qualitName,
+//         quantativeName: quantName,
+//         data : []
+//       }
+//     ];
+
+//     return respondJSON(request, response, 201, responseJSON);
+//   }
+//   else{
+
+//     const responseJSON = {
+//       message: 'Charts quantative/qualitative data names has been changed/updated',
+//     };
+
+//     const qualitName = body.qualitNam;
+//     const quantName = body.quantNam;
+//     charts[body.name].qualitiveName = qualitName;
+//     charts[body.name].quantativeName = quantName;
+
+//     return respondJSON(request, response, 201, responseJSON);
+//   }
+// }
+// const addBar  = (request,response,body) =>{
+//   if(!body.name || !body.qualitNam || !body.quantNam || !body.qualitVal || !body.quantVal){
+//     const responseJSON = {
+//       message: 'To Create a chart you need a Name, qualitative data name, as well as a quantitative data name',
+//       id: 'missingParams',
+//     };
+//     return respondJSON(request, response, 400, responseJSON);
+//   }
+//   else{
+//     const responseJSON = {
+//       message: 'A Bar has been added to the chart',
+//     };
+
+//     const dataSet = {
+//       [body.quantNam] : body.quantVal,
+//       [body.qualitNam] : body.qualitVal
+//     }
+//     charts[body.name].data.push(dataSet);
+//     return respondJSON(request, response, 201, responseJSON);
+//   }
+
+  
+  
+// }
+// const getChartKeys = (request,response) =>{
+//   let keys =  Object.keys(charts);
+//   return respondJSON(request,response,200,keys);
+// }
 
 module.exports = {
   getCharts,
-  addBarToChart,
+  createChart,
+  createBar,
+  //addBarToChart,
   notFound,
   notFoundMeta,
   getChartNames,
