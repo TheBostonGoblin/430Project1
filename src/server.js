@@ -33,14 +33,11 @@ const handleGet = (request, response, parsedURL) => {
     htmlHandler.getCSS(request, response);
   } else if (parsedURL.pathname === '/getCharts') {
     jsonHandler.getCharts(request, response);
-  } 
-  else if(parsedURL.pathname === '/images/rabbit.png'){
-    htmlHandler.getImage(request,response);
-  }
-  else if(parsedURL.pathname === '/getPreExisting'){
-    jsonHandler.getChartNames(request,response);
-  }
-  else {
+  } else if (parsedURL.pathname === '/images/rabbit.png') {
+    htmlHandler.getImage(request, response);
+  } else if (parsedURL.pathname === '/getPreExisting') {
+    jsonHandler.getChartNames(request, response);
+  } else {
     jsonHandler.notFoundMeta(request, response);
   }
 };
@@ -48,11 +45,9 @@ const handleGet = (request, response, parsedURL) => {
 const handlePost = (request, response, parsedURL) => {
   if (parsedURL.pathname === '/addChart') {
     parseBody(request, response, jsonHandler.createChart);
-  }
-  else if(parsedURL.pathname === '/removeChart'){
+  } else if (parsedURL.pathname === '/removeChart') {
     parseBody(request, response, jsonHandler.deleteChart);
-  }
-  else if(parsedURL.pathname === '/addBar'){
+  } else if (parsedURL.pathname === '/addBar') {
     parseBody(request, response, jsonHandler.createBar);
   }
 };

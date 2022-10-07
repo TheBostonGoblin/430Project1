@@ -9,9 +9,9 @@ const respondFunction = (request, response, status, content, contentType) => {
   response.end();
 };
 
-const getImage = (request,response) =>{
+const getImage = (request, response) => {
   respondFunction(request, response, 200, image, 'image/png');
-}
+};
 const getIndex = (request, response) => {
   respondFunction(request, response, 200, index, 'text/html');
 };
@@ -23,5 +23,5 @@ const getCSS = (request, response) => {
 module.exports = {
   getIndex,
   getCSS,
-  getImage
+  getImage,
 };
