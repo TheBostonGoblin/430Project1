@@ -5,14 +5,33 @@ body,html{
     width: 100%;
     margin: 0;
     padding: 0;
-    background-color: thistle;
+    background-color: #7c7267;
 }
-#chartSetupSec{
-
+#header{
+    background-color: #2A3D45;
+    border-bottom: solid black 2px;
 }
-#addBarSec{
-
+#centralControl{
+    border: solid black 2px;
+    background-color: #2A3D45;
 }
-#getGraphSec{
-
+#controlBox1,#addChartForm{
+    background-color: #da8c81;
+}
+#controlBox2,#addBarForm{
+    background-color: #da8c81;
+}
+#controlBox3{
+    background-color: #da8c81;
+}
+#statusMessage{
+    background-color: #da8c81;
+}
+#loadedChart{
+ background-color: whitesmoke;
+ border: solid black 2px;
+}
+#footer{
+    border-top: solid black 2px;
+    background-color: #2A3D45;
 }

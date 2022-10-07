@@ -34,11 +34,14 @@ const handleGet = (request, response, parsedURL) => {
   } else if (parsedURL.pathname === '/getCharts') {
     jsonHandler.getCharts(request, response);
   } 
+  else if(parsedURL.pathname === '/images/rabbit.png'){
+    htmlHandler.getImage(request,response);
+  }
   else if(parsedURL.pathname === '/getPreExisting'){
     jsonHandler.getChartNames(request,response);
   }
   else {
-    htmlHandler.getIndex(request, response);
+    jsonHandler.notFoundMeta(request, response);
   }
 };
 

@@ -7,63 +7,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>430 Project 1</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     <link rel="stylesheet" type="text/css" href="./style.css">
 </head>
-
 <script>
     const generateBarChart = (jsonObject, selectedChartName) => {
-        const margin = { top: 10, right: 10, bottom: 90, left: 170 },
-            width = 1000 - margin.left - margin.right,
-            height = 1000 - margin.top - margin.bottom;
+        let margin = { top: 100, right: 10, bottom: 90, left: 170 }
+        let width = 700 - margin.left - margin.right
+        let height = 700 - margin.top - margin.bottom;
 
         const removedSVG = d3.select('svg').remove();
+
         const svg = d3.select("#loadedChart")
             .append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
-
-        console.log(eval(`jsonObject.charts.${selectedChartName}`));
         let chartSelected = eval(`jsonObject.charts.${selectedChartName}`);
 
         let keys = Object.keys(chartSelected[0]);
-        const qualitativeData = keys[1];//Names,Brands,Spices, Objects that dont reprenet numeric value
+
         const quantitativeData = keys[0];//Number Of Kids, Age, Number
+        const qualitativeData = keys[1];//Names,Brands,Spices, Objects that dont reprenet numeric value
+        const prefixData = keys[2];
+        const suffixData = keys[3];
+
+        const prefix = chartSelected[0].prefix;
+        const suffix = chartSelected[0].suffix;
 
         chartSelected.forEach(function (d) {
             eval(`d.${qualitativeData} = d.${qualitativeData}`);
             eval(`d.${quantitativeData} = parseInt(d.${quantitativeData})`);
         });
 
-        //Labels
-        svg.append("text")
-                .text(keys[0])
-                .style("text-anchor","middle")
-                .style("font-weight","bold")
-                .attr("transform",`translate(${width/2},${height+30})`)
-                
-                svg.append("text")
-                .text(keys[1])
-                .style("text-anchor","middle")
-                .style("font-weight","bold")
-                .attr("transform",`translate(${-30},${height/2}) rotate(-90)`);
-
-
-        
-
         const xScale = d3.scaleBand()
             .range([0, width])
             .domain(chartSelected.map(d => eval(`d.${qualitativeData}`)))
             .padding(0.2);
 
-
+        let widestXAxisTick = 0;
+        let widestYAxisTick = 0;
         svg.append("g")
+            .attr("class", "xScale")
             .attr("transform", `translate(0, ${height})`)
             .call(d3.axisBottom(xScale))
             .selectAll("text")
-            .attr("class","xAxisTicks")
-            .attr("transform", `translate(${-margin.right - 3},9)rotate(-90)`)
+            .each(function (d) {
+                let currentText = d3.select(this);
+                let bbox = currentText.node().getBBox();
+                if (widestXAxisTick <= bbox.width) {
+                    widestXAxisTick = bbox.width;
+                }
+            })
+            .attr("class", "xAxisTicks")
+            .attr("transform", `translate(${-margin.right - 3},9)rotate(-89)`)
             .style("text-anchor", "end");
 
 
@@ -71,48 +69,129 @@
             .domain([0, d3.max(chartSelected, (d) => eval(`d.${quantitativeData}`))])
             .range([height, 0]);
 
+
         svg.append("g")
+            .attr("class", "yScale")
             .call(d3.axisLeft(yScale))
             .selectAll("text")
-            .attr("class","yAxisTicks");
+            .text(function (d) { return `${prefix}` + d3.format(".2s")(d) + ` ${suffix}` })
+            .each(function (d) {
+                let currentText = d3.select(this);
+                let bbox = currentText.node().getBBox();
+                if (widestYAxisTick <= bbox.width) {
+                    widestYAxisTick = bbox.width;
+                }
+            })
+            .attr("class", "yAxisTicks");
 
-            //resizing margins depending on text data
+        //Labels
+        let qualitiveLabelBBox;
+        let axisXBBox = d3.select(".xScale").node().getBoundingClientRect();
+        let axisYBBox = d3.select(".yScale").node().getBoundingClientRect();
+
+        let xLabel = svg.append("text")
+            .text(keys[1])
+            .style("text-anchor", "middle")
+            .style("font-weight", "bold")
+            .attr("transform", `translate(${width / 2},${height + axisXBBox.height + 30})`);
+        //.attr("transform", `translate(${(width / 2)},${height - 30})`);
+
+        let yLabel = svg.append("text")
+            .text(keys[0])
+            .style("text-anchor", "middle")
+            .style("font-weight", "bold")
+            .attr("transform", `translate(${-axisYBBox.width - 30},${height / 2}) rotate(-90)`);
+        //.attr("transform", `translate(${-width},${(height / 2)}) rotate(-89)`);
 
 
 
-        svg.selectAll("mybar")
-            .data(chartSelected)
-            .join("rect")
-            .attr("x", d => xScale(eval(`d.${qualitativeData}`)))
-            .attr("y", d => yScale(eval(`d.${quantitativeData}`)))
-            .attr("width", xScale.bandwidth())
-            .attr("height", d => height - yScale(eval(`d.${quantitativeData}`)))
-            .attr("fill", "#69b3a2");
+        svg.append("text")
+            .text(selectedChartName)
+            .style("text-anchor", "middle")
+            .style("font-weight", "bold")
+            .attr("transform", `translate(${width / 2},${-20})`);
+
+
+        margin = { top: 100, right: 10, bottom: 90 + widestXAxisTick, left: 170 + widestYAxisTick }
+        svg.attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom);
+
+
+
+
+
+        //only the first element of a selected chart will have empty variables but to stop errors it needs to be implimented
+        let isQualtitativeReal = eval(`chartSelected[0].${qualitativeData}`);
+
+        if (isQualtitativeReal) {
+            svg.selectAll("mybar")
+                .data(chartSelected)
+                .join("rect")
+                .attr("x", d => xScale(eval(`d.${qualitativeData}`)))
+                .attr("y", d => yScale(eval(`d.${quantitativeData}`)))
+                .attr("width", xScale.bandwidth())
+                .attr("height", d => height - yScale(eval(`d.${quantitativeData}`)))
+                .attr("fill", "#0095FF");
+        }
+
 
     }
 
     const handleResponse = async (response, method, url) => {
 
-        const chartNameFieldVal = addChartForm.querySelector('#chartNam').value;
+        const chartNameFieldVal = document.querySelector('#chartNam').value;
         const status = document.querySelector("#status");
         const message = document.querySelector("#message");
         const selectChart = document.querySelector('#seleChart');
 
         //may be replaced in the future
         if (response.status === 200) {
-            status.innerHTML = '<b>Status: Successful<b>';
+            if (url === '/getPreExisting') {
+            }
+            else {
+                status.innerHTML = '<b>Status: Successful<b>';
+            }
+
         }
         else if (response.status === 201) {
-            //chart created/bar created
-            status.innerHTML = '<b>Status: Bar/Chart Created<b>';
-            let option = document.createElement("option");
-            option.text = chartNameFieldVal;
-            option.value = chartNameFieldVal;
-            selectChart.add(option);
+
+            if (url === "/addChart") {
+                let option = document.createElement("option");
+                option.text = chartNameFieldVal;
+                option.value = chartNameFieldVal;
+                selectChart.add(option);
+                status.innerHTML = '<b>Status: Chart Created<b>';
+                if (selectChart.options.length === 1) {
+
+                    chartTracker.innerHTML = `Selected Chart: ${chartNameFieldVal}`;
+                }
+
+                const chartNameField = document.querySelector('#chartNam');
+                const chartQualitName = document.querySelector('#qualDataNam');
+                const chartQuantName = document.querySelector('#quantDataNam');
+                const chartQualitVal = document.querySelector('#qualitData');
+                const chartQuantVal = document.querySelector('#quantData');
+                chartNameField.value = "";
+                chartQualitName.value = "";
+                chartQuantName.value = "";
+                chartQualitVal.value = "";
+                chartQuantVal.value = "";
+
+                document.querySelector('#prefixSele').options[0].selected = true;
+                document.querySelector('#suffixInput').value = "";
+            }
+            else {
+                status.innerHTML = '<b>Status: Bar Created<b>';
+                document.querySelector('#qualitData').value = "";
+                document.querySelector('#quantData').value = "";
+            }
+
         }
         else if (response.status === 204) {
             //bar updated
-            status.innerHTML = '<b>Status: Bar/Chart Updated/Deleted<b>';
+            status.innerHTML = '<b>Status: Bar Updated<b>';
+            document.querySelector('#qualitData').value = "";
+            document.querySelector('#quantData').value = "";
         }
         else if (response.status === 400) {
             status.innerHTML = '<b>Status: Bad Request<b>';
@@ -134,7 +213,6 @@
                 message.innerHTML = `Message: ${obj.message}`;
             }
             else {//if it does not have a message this means its a result most likely getUsers show results 
-                //console.log(obj);
                 if (url === '/getPreExisting') {
                     obj.forEach(function (chart) {
                         let option = document.createElement("option");
@@ -142,6 +220,10 @@
                         option.value = chart;
                         selectChart.add(option);
                     });
+                    const chartTracker = document.querySelector("#chartTracker");
+
+                    let preloaded = selectChart.value;
+                    chartTracker.innerHTML = `Selected Chart: ${preloaded}`;
                 }
                 else if (url === '/getCharts') {
                     let jsonString = JSON.stringify(obj.charts);
@@ -162,6 +244,13 @@
                     message.innerHTML = `Message: ${obj.message}`;
                 }
             }
+            else if (response.status === 204) {
+                const barNameFieldVal = document.querySelector('#qualitData').value;
+                const chartSeleVal = document.querySelector('#chartSele').value;
+
+                let message = `The Bar "${barNameFieldVal}" of Chart "${chartSeleVal}" Has Been Updated`;
+                message.innerHTML = `Message: ${message}`;
+            }
             else {//if it is really just a head request than there is no message needed
                 if (url === '/removeChart') {
                     selectChart.remove(selectChart.selectedIndex);
@@ -180,10 +269,13 @@
         const chartQualitVal = addChartForm.querySelector('#qualitData');
         const chartQuantVal = addChartForm.querySelector('#quantData');
 
+        const chartPrefix = addChartForm.querySelector('#prefixSele').value;
+        const chartSuffix = addChartForm.querySelector('#suffixInput').value;
+
         const addChartURL = addChartForm.getAttribute('action');
         const addChartMethod = addChartForm.getAttribute('method');
 
-        const formData = `name=${chartNameField.value}&qualitNam=${chartQualitName.value}&quantNam=${chartQuantName.value}`;
+        const formData = `name=${chartNameField.value}&qualitNam=${chartQualitName.value}&quantNam=${chartQuantName.value}&prefix=${chartPrefix}&suffix=${chartSuffix}`;
 
         let response = await fetch(addChartURL, {
             method: addChartMethod,
@@ -196,19 +288,20 @@
 
         handleResponse(response, 'POST', addChartURL);
     }
-    const postRequestCreateBar = async (addBarForm) =>{
+    const postRequestCreateBar = async (addBarForm) => {
 
         const chartQualitVal = addBarForm.querySelector('#qualitData').value;
         const chartQuantVal = addBarForm.querySelector('#quantData').value;
-        let selectedChartName = document.querySelector('#seleChart').value;
+        const selectedChartName = document.querySelector('#seleChart').value;
+        const barSelected = document.querySelector('#qualDataNam').value;
 
         const addBarURL = addBarForm.getAttribute('action');
-        const addChartMethod = addBarForm.getAttribute('method');
+        const addBarMethod = addBarForm.getAttribute('method');
 
-        const formData = `name=${selectedChartName}&qualitVal=${chartQualitVal}&quantVal=${chartQuantVal}`;
+        const formData = `name=${selectedChartName}&qualitVal=${chartQualitVal}&quantVal=${chartQuantVal}&quantNam=${barSelected}`;
 
         let response = await fetch(addBarURL, {
-            method: addChartMethod,
+            method: addBarMethod,
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 "Accept": 'application/json'
@@ -233,7 +326,7 @@
             },
             body: formData
         });
-        handleResponse(response, 'POST',url);
+        handleResponse(response, 'POST', url);
     }
     const getChartRequest = async (getChartForm) => {
         let method = 'get';
@@ -269,6 +362,7 @@
         const addBarForm = document.querySelector('#addBarForm');
 
         getPreExistingRequest();
+
         const addChart = (e) => {
             e.preventDefault();
             postRequestCreateChart(addChartForm);
@@ -288,15 +382,21 @@
             return false;
         }
 
-        const removeChartForm = document.querySelector('#removeChartForm');
-        const removeChart = (e) =>{
+        const removeChartForm = document.getElementById('removeChartForm');
+        const removeChart = (e) => {
             e.preventDefault();
             postRequestRemoveChart(removeChartForm);
             return false;
         }
 
+
+        const selectChart = document.querySelector("#seleChart");
+
+        selectChart.addEventListener('change', function () {
+            document.querySelector("#chartTracker").innerHTML = `Chart Selected: ${selectChart.value}`;
+        })
         removeChartForm.addEventListener('submit', removeChart);
-        addBarForm.addEventListener('submit',addBar);
+        addBarForm.addEventListener('submit', addBar);
         addChartForm.addEventListener('submit', addChart);
         getChartForm.addEventListener('submit', getCharts);
     }
@@ -305,44 +405,126 @@
 </script>
 
 <body>
-    <h1>Bar Chart Creation App</h1>
-    <form id="addChartForm" action="/addChart" method="post">
-        <label for="chartName">Chart Name:</label>
-        <input type="text" name="chartName" id="chartNam">
+    <div id="header" class="box is-primary columns">
+        <div class="column is-2">
 
-        <label for="qualitNam">(Name)Qualitative Data Name:</label>
-        <input type="text" name="qualitNam" id="qualDataNam">
+        </div> 
 
-        <label for="quantNam">(Age)Quantitative Data Name</label>
-        <input type="text" name="quantNam" id="quantDataNam">
+        <div class=" is-128 column is-2">
+            <img src="../images/rabbit.png" alt="" width="100" height="100">
+        </div>
+        <section class="hero is-small column is-4">
 
-        <input type="submit" value="Create Chart">
-    </form>
+            <div class="hero-body">
+                <p class="title has-text-white-bis">
+                    Barchart Bunny
+                </p>
+                <p class="subtitle is-5 has-text-grey-light">
+                    Create Bar Charts with the power of D3&NodeJS!
+                </p>
+            </div>
+        </section>
+        <div class=" is-128x128 column is-2">
+            <img src="../images/rabbit.png" alt="" width="100" height="100">
+        </div> -->
+        <div class="column is-2">
 
-    <form id="addBarForm" action="/addBar" method="post">
-        <label for="qualitVal">(Kid Name) Bar Quantitative Value:</label>
-        <input id="qualitData" type="text" name="qualitVal">
-
-        <label for="quantVal">(Kid Age) Bar Qualtitative Value:</label>
-        <input id="quantData" type="text" name="quantVal">
-
-        <input type="submit" value="Add Bar">
-    </form>
-
-    <form id="getChartForm" action="/getCharts" method="get">
-        <select name="selectChart" id="seleChart"></select>
-        <input id="chartsDD" type="submit" value="Get Chart">
-    </form>
-
-    <form id="removeChartForm" action="/removeChart" method="post">
-        <input id="removeChart" type="submit" value="Remove Chart">
-    </form>
-
-    <h2 id="status"></h2>
-    <p id="message"></p>
-    <div id="loadedChart">
-
+        </div>
     </div>
+    <div id="centralControl" class=" m-5 columns box is-vcentered is-centered">
+
+        <div class="column is-4">
+            <form class="box" id="addChartForm" action="/addChart" method="post">
+                <h1 class="title column is-12">Create Bar Chart</h1>
+                <div class="columns is-multiline">
+                    <div class="column is-12">
+                        <label for="chartName">Chart Name:</label>
+                        <input type="text" name="chartName" id="chartNam" placeholder="ex:(DogBreedAverageLife)">
+                    </div>
+                    <div class="column is-12">
+                        <label for="qualitNam">Qualitative Data Name:</label>
+                        <input type="text" name="qualitNam" id="qualDataNam" placeholder="ex:(Names,Company,etc)">
+                    </div>
+                    <div class="column is-12">
+                        <label for="quantNam">Quantitative Data Name:</label>
+                        <input type="text" name="quantNam" id="quantDataNam" placeholder="ex:(Age,Speed,Height,etc)">
+                    </div>
+                    <div class="column is-12">
+                        <label for="prefixSele">Select Prefix:</label>
+                        <select name="prefixSele" id="prefixSele">
+                            <option value=" ">None</option>
+                            <option value="$">$</option>
+                            <option value="€">€</option>
+                        </select>
+                    </div>
+                    <div class="column is-12">
+                        <label for="suffixInput">Input Suffix</label>
+                        <input type="text" name="suffixInput" id="suffixInput" placeholder="ex:(in,ft,km,mph)">
+                    </div>
+                    <div class="column is-12">
+                        <input type="submit" value="Create Chart">
+                    </div>
+
+                </div>
+            </form>
+        </div>
+        <div class="column is-4">
+            <form class="box" id="addBarForm" action="/addBar" method="post">
+                <h1 class="title column is-12">Create Bar</h1>
+                <h2 id="chartTracker" class="subtitle column is-12">Selected Chart: N/A</h2>
+                <div class="column is-12">
+                    <label for="qualitVal" id="qualitLabel">Bar Quantitative Value:</label>
+                    <input id="qualitData" type="text" name="qualitVal" placeholder="ex:(Ford,David)">
+                </div>
+                <div class="column is-12">
+                    <label for="quantVal" id="quantLabel">Bar Qualitative Value:</label>
+                    <input id="quantData" type="number" name="quantVal" placeholder="ex:1,2,3...">
+                </div>
+                <div class="column is-12">
+                    <input type="submit" value="Add Bar">
+                </div>
+            </form>
+        </div>
+        <div class="column is-4">
+            <div id="controlBox3" class="box columns is-multiline">
+                <form class="columns is-multiline" id="getChartForm" action="/getCharts" method="get">
+                    <h1 class="title column is-12">Select/Display/Delete Chart</h1>
+                    <div class="column is-12">
+                        <label for="selectChart">Selected Chart:</label>
+                        <select name="selectChart" id="seleChart"></select>
+                    </div>
+                    <div class="column is-12">
+                        <input id="chartsDD" type="submit" value="Display Chart">
+                    </div>
+
+                </form>
+                <form class="column is-12" id="removeChartForm" action="/removeChart" method="post">
+                    <input id="removeChart" type="submit" value="Remove Chart">
+                </form>
+
+
+            </div>
+        </div>
+    </div>
+
+    <div id="statusMessage" class="columns box m-6">
+        <div class="column is-6">
+            <h2 class="subtitle has-text-weight-bold" id="status">Status:</h2>
+        </div>
+        <div class="column is-6 has-text-weight-bold">
+            <h2 class="subtitle has-text-weight-bold" id="message">Message:</h2>
+        </div>
+    </div>
+
+
+
+
+    <div class="box ml-6 mr-6" id="loadedChart">
+    </div>
+
+    <footer id="footer" class="footer is-vcentered">
+        <h1 class="title has-text-grey-lighter">Author: Daniel Joseph Jr | Completed:10/7/2022 </h1>
+    </footer>
 </body>
 
 </html>
