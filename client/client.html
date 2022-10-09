@@ -139,7 +139,8 @@
 
     const handleResponse = async (response, method, url) => {
 
-        const chartNameFieldVal = document.querySelector('#chartNam').value;
+        let chartNameFieldVal = document.querySelector('#chartNam').value;
+        const chartNameFieldNam = document.querySelector('#chartNam').value;
         const status = document.querySelector("#status");
         const message = document.querySelector("#message");
         const selectChart = document.querySelector('#seleChart');
@@ -158,12 +159,13 @@
             if (url === "/addChart") {
                 let option = document.createElement("option");
                 option.text = chartNameFieldVal;
+                chartNameFieldVal = chartNameFieldVal.replace(/\s/g,'');
                 option.value = chartNameFieldVal;
                 selectChart.add(option);
                 status.innerHTML = '<b>Status: Chart Created<b>';
                 if (selectChart.options.length === 1) {
 
-                    chartTracker.innerHTML = `Selected Chart: ${chartNameFieldVal}`;
+                    chartTracker.innerHTML = `Selected Chart: ${chartNameFieldNam}`;
                 }
 
                 const chartNameField = document.querySelector('#chartNam');
@@ -246,7 +248,7 @@
             }
             else if (response.status === 204) {
                 const barNameFieldVal = document.querySelector('#qualitData').value;
-                const chartSeleVal = document.querySelector('#chartSele').value;
+                const chartSeleVal = document.querySelector('#seleChart').value;
 
                 let message = `The Bar "${barNameFieldVal}" of Chart "${chartSeleVal}" Has Been Updated`;
                 message.innerHTML = `Message: ${message}`;
@@ -263,9 +265,9 @@
         }
     }
     const postRequestCreateChart = async (addChartForm) => {
-        const chartNameField = addChartForm.querySelector('#chartNam');
-        const chartQualitName = addChartForm.querySelector('#qualDataNam');
-        const chartQuantName = addChartForm.querySelector('#quantDataNam');
+        let chartNameField = addChartForm.querySelector('#chartNam').value;
+        let chartQualitName = addChartForm.querySelector('#qualDataNam').value;
+        let chartQuantName = addChartForm.querySelector('#quantDataNam').value;
         const chartQualitVal = addChartForm.querySelector('#qualitData');
         const chartQuantVal = addChartForm.querySelector('#quantData');
 
@@ -275,7 +277,11 @@
         const addChartURL = addChartForm.getAttribute('action');
         const addChartMethod = addChartForm.getAttribute('method');
 
-        const formData = `name=${chartNameField.value}&qualitNam=${chartQualitName.value}&quantNam=${chartQuantName.value}&prefix=${chartPrefix}&suffix=${chartSuffix}`;
+        chartNameField = chartNameField.trim();
+        chartQualitName = chartQualitName.trim();
+        chartQuantName = chartQuantName.trim();
+
+        const formData = `name=${chartNameField}&qualitNam=${chartQualitName}&quantNam=${chartQuantName}&prefix=${chartPrefix}&suffix=${chartSuffix}`;
 
         let response = await fetch(addChartURL, {
             method: addChartMethod,

@@ -56,11 +56,17 @@ const createChart = (request, response, body) => {
       message: `The Chart Named "${body.name}" Created Sucessfully`,
     };
 
-    const qualitName = body.qualitNam;
+    let qualitName = body.qualitNam;
 
-    const quantName = body.quantNam;
+    let quantName = body.quantNam;
 
-    charts[body.name] = [
+    let chartName = body.name;
+
+    qualitName = qualitName.replace(/\s/g,'');
+    quantName = quantName.replace(/\s/g,'');
+    chartName = chartName.replace(/\s/g,'');
+
+    charts[chartName] = [
       {
         [quantName]: null,
         [qualitName]: null,
@@ -127,6 +133,7 @@ const createBar = (request, response, body) => {
         return respondJSON(request, response, 201, responseJSON);
       }
     }
+    charts[body.name] = chartSelected;
     return respondJSONMeta(request, response, 204);
   }
   updated = false;
@@ -139,12 +146,6 @@ const createBar = (request, response, body) => {
     }
     return _bar;
   });
-  // chartSelected.forEach((bar) => {
-  //   if (bar[qualitKey] === body.qualitVal) {
-  //     bar.setAttribute(quantKey, body.quantVal);
-  //     updated = true;
-  //   }
-  // });
   if (!updated) {
     const newData = {
       [quantKey]: body.quantVal,
@@ -157,7 +158,7 @@ const createBar = (request, response, body) => {
     };
     return respondJSON(request, response, 201, responseJSON);
   }
-
+  charts[body.name] = chartSelected;
   return respondJSONMeta(request, response, 204);
 };
 
